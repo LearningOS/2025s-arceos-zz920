@@ -81,6 +81,7 @@ pub mod net;
 pub mod hash;
 
 pub mod collections {
+    #[cfg(feature = "alloc")]
     pub use alloc::collections::*;
 
     pub use super::hash::HashMap;
