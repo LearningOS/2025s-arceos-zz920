@@ -78,11 +78,11 @@ pub mod fs;
 #[cfg(feature = "net")]
 pub mod net;
 
+#[cfg(feature = "alloc")]
 pub mod hash;
 
+#[cfg(feature = "alloc")]
 pub mod collections {
-    #[cfg(feature = "alloc")]
     pub use alloc::collections::*;
-
     pub use super::hash::HashMap;
 }
