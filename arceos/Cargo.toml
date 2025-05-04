@@ -23,6 +23,8 @@ members = [
     "api/arceos_api",
     "api/arceos_posix_api",
 
+    "axfs_ramfs",
+
     "ulib/axstd",
     "ulib/axlibc",
 
@@ -90,6 +92,8 @@ axsync = { path = "modules/axsync" }
 axtask = { path = "modules/axtask" }
 axdma = { path = "modules/axdma" }
 elf = { path = "modules/elf" }
+
+axfs_ramfs = { path = "axfs_ramfs" }
 
 [patch.crates-io]
 kernel_guard = { path = "../crates/kernel_guard"} 
