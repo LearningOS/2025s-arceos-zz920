@@ -2,12 +2,14 @@
 
 use core::ffi::{c_void, c_char, c_int};
 use axhal::arch::TrapFrame;
+use axhal::mem::phys_to_virt;
 use axhal::trap::{register_trap_handler, SYSCALL};
 use axerrno::LinuxError;
 use axtask::current;
 use axtask::TaskExtRef;
 use axhal::paging::MappingFlags;
 use arceos_posix_api as api;
+use memory_addr::PAGE_SIZE_4K;
 
 const SYS_IOCTL: usize = 29;
 const SYS_OPENAT: usize = 56;
@@ -140,7 +142,37 @@ fn sys_mmap(
     fd: i32,
     _offset: isize,
 ) -> isize {
-    unimplemented!("no sys_mmap!");
+    let curr = current();
+    let mut uspace = curr.task_ext().aspace.lock();
+
+    let mut buf: [u8; 4096] = [0u8; PAGE_SIZE_4K];
+
+    let mut start_addr: usize = 0x100000;
+
+    loop { 
+        let size = api::sys_read(fd, buf.as_mut_ptr() as *mut c_void, PAGE_SIZE_4K);
+        if size <= 0 {
+            break;
+        }
+
+        uspace.map_alloc(start_addr.into(), PAGE_SIZE_4K, MappingFlags::READ|MappingFlags::WRITE|MappingFlags::EXECUTE|MappingFlags::USER, true);
+        let (paddr, _, _) = uspace
+            .page_table()
+            .query(start_addr.into())
+            .unwrap();
+
+        unsafe {
+            core::ptr::copy_nonoverlapping(
+                buf.as_ptr(), 
+                phys_to_virt(paddr).as_mut_ptr(), 
+                PAGE_SIZE_4K,
+            );
+        }
+        start_addr += size as usize;
+    }
+
+    0x100000
+    // unimplemented!("no sys_mmap!");
 }
 
 fn sys_openat(dfd: c_int, fname: *const c_char, flags: c_int, mode: api::ctypes::mode_t) -> isize {
